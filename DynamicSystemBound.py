@@ -57,6 +57,17 @@ rho = np.clip(rho, eps, None)
 pi = np.clip(pi, eps, None)
 kl_estimate = np.sum(rho * (log_rho - log_pi)) * (6 / 100)**2  # 网格间距 = 6 / 100
 
+# ---------- PAC-Bayes Bound ----------
+N = 100
+delta = 0.05
+log_term = np.log(2 * np.sqrt(N) / delta)
+pac_bayes_bound = estimated_empirical_loss + np.sqrt((kl_estimate + log_term) / (2 * N))
+
+# ---------- 输出结果 ----------
+print("经验误差 =", estimated_empirical_loss)
+print("KL 散度 =", kl_estimate)
+print("PAC-Bayes 泛化误差上界 =", pac_bayes_bound)
+
 # ---------- 可视化 ----------
 plt.figure(figsize=(8, 6))
 sns.kdeplot(x=samples[:, 0], y=samples[:, 1], fill=True, cmap="Blues", levels=20, thresh=0.05)
@@ -68,6 +79,3 @@ plt.legend()
 plt.grid(True)
 plt.tight_layout()
 plt.show()
-
-# ---------- 输出结果 ----------
-estimated_empirical_loss, kl_estimate
