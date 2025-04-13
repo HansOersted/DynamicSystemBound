@@ -4,13 +4,13 @@ import scipy.stats as stats
 import seaborn as sns
 from sklearn.neighbors import KernelDensity
 
-# ---------- 参数设置 ----------
+# ---------- params ----------
 sigma2 = 0.02
 lambda_N = np.sqrt(100)
 theta_star = np.array([1.0, -1.0])
 np.random.seed(0)
 
-# ---------- 损失函数 ----------
+# ---------- loss ----------
 def empirical_loss(theta):
     return np.sum((theta - theta_star)**2)
 
@@ -19,7 +19,7 @@ def unnormalized_log_posterior(theta):
     loss = empirical_loss(theta)
     return log_prior - lambda_N * loss
 
-# ---------- Metropolis-Hastings 采样 ----------
+# ---------- Metropolis-Hastings (MCMC design) ----------
 def metropolis_hastings(log_prob_func, init_theta, num_samples, step_size=0.1):
     samples = []
     theta = init_theta
@@ -38,11 +38,11 @@ def metropolis_hastings(log_prob_func, init_theta, num_samples, step_size=0.1):
 
     return np.array(samples)
 
-# ---------- 执行 MCMC ----------
+# ---------- MCMC ----------
 samples = metropolis_hastings(unnormalized_log_posterior, init_theta=np.zeros(2), num_samples=5000)
 estimated_empirical_loss = np.mean([empirical_loss(theta) for theta in samples])
 
-# ---------- KDE 拟合后验 ----------
+# ---------- kl_estimate ----------
 kde = KernelDensity(kernel='gaussian', bandwidth=0.2).fit(samples)
 grid_x, grid_y = np.meshgrid(np.linspace(-2, 4, 100), np.linspace(-4, 2, 100))
 grid_points = np.vstack([grid_x.ravel(), grid_y.ravel()]).T
@@ -55,7 +55,7 @@ pi = np.exp(log_pi)
 eps = 1e-12
 rho = np.clip(rho, eps, None)
 pi = np.clip(pi, eps, None)
-kl_estimate = np.sum(rho * (log_rho - log_pi)) * (6 / 100)**2  # 网格间距 = 6 / 100
+kl_estimate = np.sum(rho * (log_rho - log_pi)) * (6 / 100)**2 
 
 # ---------- PAC-Bayes Bound ----------
 N = 100
@@ -63,12 +63,12 @@ delta = 0.05
 log_term = np.log(2 * np.sqrt(N) / delta)
 pac_bayes_bound = estimated_empirical_loss + np.sqrt((kl_estimate + log_term) / (2 * N))
 
-# ---------- 输出结果 ----------
-print("经验误差 =", estimated_empirical_loss)
-print("KL 散度 =", kl_estimate)
-print("PAC-Bayes 泛化误差上界 =", pac_bayes_bound)
+# ---------- output ----------
+print("Estimated empirical loss =", estimated_empirical_loss)
+print("KL =", kl_estimate)
+print("PAC-Bayes generalization bound =", pac_bayes_bound)
 
-# ---------- 可视化 ----------
+# ---------- visualization ----------
 plt.figure(figsize=(8, 6))
 sns.kdeplot(x=samples[:, 0], y=samples[:, 1], fill=True, cmap="Blues", levels=20, thresh=0.05)
 plt.scatter(theta_star[0], theta_star[1], color='red', label='Target θ = [1, -1]', zorder=5)
