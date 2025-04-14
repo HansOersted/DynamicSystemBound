@@ -57,16 +57,24 @@ rho = np.clip(rho, eps, None)
 pi = np.clip(pi, eps, None)
 kl_estimate = np.sum(rho * (log_rho - log_pi)) * (6 / 100)**2 
 
-# ---------- PAC-Bayes Bound ----------
+# ---------- PAC-Bayes Bound with and without Psi ----------
 N = 100
 delta = 0.05
 log_term = np.log(2 * np.sqrt(N) / delta)
 pac_bayes_bound = estimated_empirical_loss + np.sqrt((kl_estimate + log_term) / (2 * N))
 
+# Add Psi correction term
+G1 = 0.5
+G2 = 1.0
+lambda_val = np.sqrt(N)
+psi_hat = (lambda_val**2 * G1) / N + (lambda_val * G2) / N
+pac_bayes_bound_with_psi = pac_bayes_bound + psi_hat
+
 # ---------- output ----------
 print("Estimated empirical loss =", estimated_empirical_loss)
 print("KL =", kl_estimate)
-print("PAC-Bayes generalization bound =", pac_bayes_bound)
+print("PAC-Bayes bound (without Ψ) =", pac_bayes_bound)
+print("PAC-Bayes bound (with Ψ)    =", pac_bayes_bound_with_psi)
 
 # ---------- visualization ----------
 plt.figure(figsize=(8, 6))
